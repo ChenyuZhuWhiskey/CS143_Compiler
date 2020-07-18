@@ -57,8 +57,9 @@ public:
    virtual void AddMethodToTable(Symbol class_name) = 0;
    virtual void AddAttribToTable(Symbol class_name) = 0;
    virtual Symbol GetName() = 0;
-   virtual bool IsMethod() = 0
+   virtual bool IsMethod() = 0;
 
+   virtual void CheckFeatureType() = 0;
 #ifdef Feature_EXTRAS
    Feature_EXTRAS
 #endif
@@ -207,8 +208,8 @@ public:
    }
    Feature copy_Feature();
    void dump(ostream& stream, int n);
-
    void CheckFeatureType();
+   
    //void AddToTable(Symbol class_name);
    void AddMethodToTable(Symbol class_name);
    void AddAttribToTable(Symbol class_name);
@@ -241,12 +242,13 @@ public:
    Feature copy_Feature();
    void dump(ostream& stream, int n);
 
-   void CheckFeatureType();
+   
    //void AddToTable(Symbol class_name);
    void AddMethodToTable(Symbol class_name);
    void AddAttribToTable(Symbol class_name);
    Symbol GetName() { return name; }
    bool IsMethod() { return false; }
+   void CheckFeatureType();
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS
@@ -321,6 +323,8 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+
+   Symbol CheckExprType();
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS

@@ -1,0 +1,3 @@
+./trickyatdispatch2.test:9: Expression type Adoes not conform to declared static dispatch type B.
+./trickyatdispatch2.test:9: Error! return type is not ancestor of expr type. 
+Compilation halted due to static semantic errors.

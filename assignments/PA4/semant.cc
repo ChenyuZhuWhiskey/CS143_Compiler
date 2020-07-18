@@ -107,7 +107,7 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
 
     log << "building inheritance graph:" <<std::endl;
 
-    for(int i = classes->first(); classes->more(); i = classes->next(i)){
+    for(int i = classes->first(); classes->more(i); i = classes->next(i)){
         curr_class = classes->nth(i);
 
         //class name cannot be SELF_TYPE
@@ -117,7 +117,7 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
 
         //class cannot be declared more than once
         if(m_classes.find(curr_class->GetName()) == m_classes.end()){
-            m_classes.insert(std::make_par(curr_class->GetName(),curr_class));
+            m_classes.insert(std::make_pair(curr_class->GetName(),curr_class));
         }else{
             semant_error(curr_class) << "Error! Class " << classes->nth(i)->GetName() << " has been defined!" << std::endl;
             return;
@@ -131,7 +131,7 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
     
 
     // check inheritance
-    for(int i = classes->first(); classes->more(); i = classes->next(i)){
+    for(int i = classes->first(); classes->more(i); i = classes->next(i)){
         curr_class = classes->nth(i);
         log << "    " << curr_class->GetName();
 
@@ -148,12 +148,12 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
                 semant_error(curr_class) << "Error! Class " << curr_class->GetName() << " cannot inherit from " << parent_name << std::endl;
             }
 
-            log << " <- " parent_name;
+            log << " <- " << parent_name;
             parent_name = m_classes[parent_name]->GetParent();
         }
 
         if(parent_name == Object){
-            log << " <- " parent_name << std::endl;
+            log << " <- " << parent_name << std::endl;
         }else{
             semant_error(curr_class) << "Error! Cycle inheritance!" << std::endl;
             return;
@@ -164,13 +164,16 @@ ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) 
 }
 
 bool ClassTable::CheckInheritance(Symbol ancestor, Symbol child){
+
     if(ancestor == SELF_TYPE){
+        //ancestor = curr_class -> GetName();
         return child == SELF_TYPE;
     }
 
     if(child == SELF_TYPE){
         child = curr_class -> GetName();
     }
+
 
     for(; child != No_class; child = m_classes[child]->GetParent()){
         if(child == ancestor){
@@ -180,8 +183,8 @@ bool ClassTable::CheckInheritance(Symbol ancestor, Symbol child){
     return false;
 }
 
-std::list<Symbol>& ClassTable::GetInheritancePath(Symbol type){
-    if(type == STLF_TYPE){
+std::list<Symbol> ClassTable::GetInheritancePath(Symbol type){
+    if(type == SELF_TYPE){
         type = curr_class ->GetName();
     }
 
@@ -208,6 +211,7 @@ Symbol ClassTable::FindCommonAncestor(Symbol type1, Symbol type2){
         ++iter1;
         ++iter2;
     }
+    return ret_sym;
 }
 
 void ClassTable::install_basic_classes() {
@@ -374,13 +378,19 @@ void attr_class::AddAttribToTable(Symbol class_name){
     }
 
     Symbol* tmp = &type_decl;
-    attribtable.addid(name, tmp);
+    attribtable.addid(name, new Symbol(type_decl));
 }
 
 void method_class::CheckFeatureType(){
     log << "    Checking method \"" << name << "\"" << std::endl;
 
-    if(classtable->m_classes.find(return_type) == classtable->m_classes.end()){
+    Symbol tmp;
+    if(return_type == SELF_TYPE){
+        tmp = curr_class->GetName();
+    }else{
+        tmp = return_type;
+    }
+    if(classtable->m_classes.find(tmp) == classtable->m_classes.end()){
         classtable->semant_error(curr_class) << "Error! return type " << return_type << " doesn't exist." << std::endl;
     }
     attribtable.enterscope();
@@ -402,14 +412,17 @@ void method_class::CheckFeatureType(){
             classtable->semant_error(curr_class) << "Error! self in formal " << std::endl;
         }
         Symbol* tmp = &type;
-        attribtable.addid(f_name,tmp);
+        attribtable.addid(f_name,new Symbol(type));
     }
 
     Symbol expr_type = expr->CheckExprType();
+    
     if(classtable->CheckInheritance(return_type,expr_type)){}else{
         classtable->semant_error(curr_class) << "Error! return type is not ancestor of expr type. " << std::endl;
     }
+
     attribtable.exitscope();
+    
 }
 
 void attr_class::CheckFeatureType(){
@@ -426,9 +439,9 @@ Symbol assign_class::CheckExprType(){
         type = Object;
         return type;
     }
-
     Symbol rvalue_type = expr->CheckExprType();
     if(classtable->CheckInheritance(*lvalue_type,rvalue_type)){}else{
+
         classtable->semant_error(curr_class) << "Error! lvalue is not an ancestor of rvalue. " << std::endl;
         type = Object;
         return type;
@@ -443,7 +456,8 @@ Symbol static_dispatch_class::CheckExprType(){
     Symbol expr_type = expr->CheckExprType();
     if(classtable->CheckInheritance(type_name,expr_type)){}else{
         error_detected = true;
-        classtable->semant_error(curr_class) << "Error! Static dispatch class is not an ancestor." << std::endl;
+        classtable->semant_error(curr_class) << "Expression type " << expr_type << "does not conform to declared static dispatch type " << type_name <<"." << std::endl;
+        //classtable->semant_error(curr_class) << "Error! Static dispatch class is not an ancestor." << std::endl;
     }
     log << "Static dispatch: class = " << type_name << std::endl;
 
@@ -453,7 +467,7 @@ Symbol static_dispatch_class::CheckExprType(){
     for(std::list<Symbol>::iterator iter = path.begin(); iter != path.end(); ++iter){
         log << "Looking for method in class " << *iter << std::endl;
 
-        method = methodtables[*iter].lookup(names)
+        method = methodtables[*iter].lookup(name);
         if(method){
             break; // finded
         }
@@ -467,23 +481,23 @@ Symbol static_dispatch_class::CheckExprType(){
     // check params
     for(int i = actual->first(); actual->more(i); i = actual->next(i)){
         Symbol actual_type = actual->nth(i)->CheckExprType();
-        if(!method){
+        if(method){
             Symbol formal_type = method->GetFormals()->nth(i)->GetType();
             if(classtable->CheckInheritance(formal_type,actual_type)){}else{
                 classtable->semant_error(curr_class) << "Error! Actual type " << actual_type << " doesn't suit formal type " << formal_type << std::endl;
                 error_detected = true;
             }
         }
-        if(error_detected){
-            type = Object;
-        }else{
-            type = method->GetType();
-            if(type == SELF_TYPE){
-                type = type_name;
-            }
-        }
-        return type;
     }
+    if(error_detected){
+        type = Object;
+    }else{
+        type = method->GetType();
+        if(type == SELF_TYPE){
+            type = type_name;
+        }
+    }
+    return type;
 }
 
 Symbol dispatch_class::CheckExprType(){
@@ -501,7 +515,7 @@ Symbol dispatch_class::CheckExprType(){
     for(std::list<Symbol>::iterator iter = path.begin(); iter != path.end(); ++iter){
         log << "Looking for method in class " << *iter << std::endl;
 
-        method = methodtables[*iter].lookup(names)
+        method = methodtables[*iter].lookup(name);
         if(method){
             break; // finded
         }
@@ -513,8 +527,8 @@ Symbol dispatch_class::CheckExprType(){
     }
     //check params
     for (int i = actual->first(); actual->more(i); i = actual->next(i)){
-        Symbol actual_type = actual->nth(i)->CheckExprType()
-        if(!method){
+        Symbol actual_type = actual->nth(i)->CheckExprType();
+        if(method){
             Symbol formal_type = method->GetFormals()->nth(i)->GetType();
             if (classtable->CheckInheritance(formal_type, actual_type)){}else{
                 classtable->semant_error(curr_class) << "Error! Actual type " << actual_type << " doesn't suit formal type " << formal_type << std::endl;
@@ -524,7 +538,7 @@ Symbol dispatch_class::CheckExprType(){
     }
 
     if(error_detected){
-        type = object;
+        type = Object;
     }else{
         type = method->GetType();
         if(type == SELF_TYPE){
@@ -572,15 +586,15 @@ Symbol typcase_class::CheckExprType(){
         branch_type_decls.push_back(((branch_class*)branch) -> GetTypeDecl());
 
     }
-
     for (int i = 0; i < branch_types.size() - 1; ++i) {
         for (int j = i + 1; j < branch_types.size(); ++j) {
             if (branch_type_decls[i] == branch_type_decls[j]) {
-                classtable->semant_error(curr_class) << "Error! Two branches have same type." << std::endl;
+                classtable->semant_error(curr_class) << "Duplicate branch "<< branch_type_decls[i] << " in case statement." << std::endl;
             }
         }
     }
 
+    
     type = branch_types[0];
     for(std::vector<Symbol>::iterator iter = ++(branch_types.begin());iter != branch_types.end(); ++iter){
         type = classtable->FindCommonAncestor(type, *iter);
@@ -591,7 +605,7 @@ Symbol typcase_class::CheckExprType(){
 Symbol branch_class::CheckBranchType(){
     attribtable.enterscope();
     Symbol* tmp = &type_decl;
-    attribtable.addid(name,tmp);
+    attribtable.addid(name,new Symbol(type_decl));
     Symbol type = expr->CheckExprType();
     attribtable.exitscope();
     return type;
@@ -611,7 +625,7 @@ Symbol let_class::CheckExprType(){
 
     attribtable.enterscope();
     Symbol* tmp = &type_decl;
-    attribtable.addid(identifier,tmp);
+    attribtable.addid(identifier,new Symbol(type_decl));
 
     Symbol init_type = init -> CheckExprType();
 
@@ -622,11 +636,23 @@ Symbol let_class::CheckExprType(){
     }
 
     type = body->CheckExprType();
-    attribtable->exitscope();
+    attribtable.exitscope();
     return type;
 }
 
-Symbol plus_class::CheckExrType(){
+Symbol plus_class::CheckExprType(){
+    Symbol e1_type = e1->CheckExprType();
+    Symbol e2_type = e2->CheckExprType();
+    if(e1_type!=Int || e2_type != Int){
+        classtable->semant_error(curr_class) << "Error! '-' meets non-Int value." << std::endl;
+        type = Object;
+    }else{
+        type = Int;
+    }
+    return type;
+}
+
+Symbol sub_class::CheckExprType(){
     Symbol e1_type = e1->CheckExprType();
     Symbol e2_type = e2->CheckExprType();
     if(e1_type!=Int || e2_type != Int){
@@ -816,6 +842,7 @@ void program_class::semant()
         curr_class = classtable->m_classes[class_name];
         log << "    Consider class " << class_name << ":" << std::endl;
 
+        Features curr_features = classtable->m_classes[class_name]->GetFeatures();
         for (int j = curr_features->first(); curr_features->more(j); j = curr_features->next(j)){
             Feature curr_method = curr_features->nth(j);
             if (curr_method->IsMethod() == false) {
