@@ -5,10 +5,18 @@
 #include <stdarg.h>
 #include "semant.h"
 #include "utilities.h"
+#include <symtab.h>
+
+#include<utility>
 
 
 extern int semant_debug;
 extern char *curr_filename;
+
+static ClassTable* classtable;
+static SymbolTable<Symbol,Symbol>* symboltable;
+static std::map<Symbol,std::map<Symbol,method_class>>* m_methods;
+static std::map<Symbol,std::map<Symbol,attr_class>>* m_attributes;
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -83,9 +91,49 @@ static void initialize_constants(void)
 
 
 
-ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr) {
+ClassTable::ClassTable(Classes classes) : semant_errors(0) , error_stream(cerr),m_classes(std::map<Symbol,Class_>()) {
 
     /* Fill this in */
+    install_basic_classes();
+    for(int i = classes->first();classes->more();classes->next()){
+        Class_ curr_class = classes->nth(i);
+        if(curr_class->GetName() == SELF_TYPE){
+            semant_error(curr_class) << "Error, SELF_TYPE redeclared" <<std::endl;
+        }
+        if(m_classes.find(curr_class->GetName()) == m_classes.end()){
+            m_classes.insert(std::make_pair(curr_class->GetName(),curr_class));
+        }else{
+            semant_error(curr_class) << "Error, Class " << curr_class->GetName() << " redefined" <<std::endl;
+        }
+    }
+
+    // find Main class
+    if (m_classes.find(Main) == m_classes.end()) {
+        semant_error() << "Class Main is not defined." << std::endl;
+    }
+
+    //check inheritance
+    for(int i = classes->first();classes->more();classes->next()){
+        Class_ curr_class = classes->nth(i);
+        Symbol parent_name = curr_class->GetParent();
+        while(parent_name!=Object && parent_name != curr_class->GetName()){
+            if(parent_name == Int || parent_name == Str || parent_name == SELF_TYPE || parent_name == Bool){
+                semant_error(curr_class) << "Error! Class " << curr_class->GetName() << " cannot inherit from " << parent_name << std::endl;
+                return;
+            }
+            auto iter = m_classes.find(parent_name);
+            if (iter == m_classes.end()){
+                semant_error(curr_class) << "Error! Inherent class not find!" <<std::endl;
+                return;
+            }
+            curr_class = (*iter).second;
+            parent_name = curr_class->GetParent();
+        }
+        if(parent_name != Object){
+            semant_error(curr_class) << "Error! Cycle Inheretance" << parent_name << std::endl;
+        }
+    }
+
 
 }
 
@@ -188,6 +236,13 @@ void ClassTable::install_basic_classes() {
 						      Str, 
 						      no_expr()))),
 	       filename);
+
+    m_classes.insert(std::make_pair(Object, Object_class));
+    m_classes.insert(std::make_pair(IO, IO_class)));
+    m_classes.insert(std::make_pair(Int, Int_class));
+    m_classes.insert(std::make_pair(Bool, Bool_class));
+    m_classes.insert(std::make_pair(Str,Str_class));
+
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -245,6 +300,53 @@ void program_class::semant()
     ClassTable *classtable = new ClassTable(classes);
 
     /* some semantic analysis code may go here */
+
+    // initialize symbol table and methods
+    symboltable = new SymbolTable<Symbol.Symbol>();
+    m_methods = new std::map<Symbol,std::map<Symbol,method_class>>();
+    m_attributes = new std::map<Symbol,std::map<Symbol,attr_class>>();
+
+    //construct method table and arribute table
+    Class_ curr_class;
+    for(int i = classes->first();classes->more();classes->next(i)){
+        curr_class = classes->nth(i);
+        Features features = curr_class->GetFeatures();
+        std::map<Symbol,method_class> tmp_method_map = std::map<Symbol,method_class>();
+        std::map<Symbol,attr_class> tmp_attr_map = std::map<Symbol,attr_class>();
+        for(int j = features->first();features->more();features->next(j)){
+            Feature curr_feature = features->nth(j);
+            add_feature_to_method_map(*curr_feature, tmp_method_map);
+            add_feature_to_attr_map(*curr_feature, tmp_attr_map);
+        }
+        m_methods->insert(std::make_pair(curr_class->GetName(),tmp_method_map));
+
+    }
+
+    //check if method overloading is correct
+
+    Claass_ curr_class = classtable->m_classes[class_name];
+    Features curr_features = classtable->m_classes[class_name]->GetFeatures();
+    for (int j = curr_features->first(); curr_features->more(j); j = curr_features->next(j)) {
+        Feature curr_method = curr_features->nth(j);
+        check_method_overrride(*curr_method,curr_class->GetName(),m_methods,classtable);
+    }
+
+    //type check
+    for(int i = classes->first();classes->more(i);classes->next(i)){
+        curr_class = classes->nth(i);
+        Features features = curr_class->GetFeatures();
+        Feature curr_feature;
+        symboltable->enterscope();
+        for(int j = features->first();features->more();features->next(j)){
+            curr_feature = features->nth(j);
+            add_feature_to_symboltable(*curr_feature,symboltable,classtable);
+        }
+        for(int j = features->first();features->more();features->next(j)){
+            curr_feature = features->nth(j);
+            check_feature_type(*curr_feature,symboltable,classtable);
+        }
+        symboltable->exitcope();
+    }
 
     if (classtable->errors()) {
 	cerr << "Compilation halted due to static semantic errors." << endl;

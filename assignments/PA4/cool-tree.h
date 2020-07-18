@@ -1,5 +1,5 @@
-#ifndef COOL_TREE_H
-#define COOL_TREE_H
+#ifndef COOL_TREE_FAIL_H
+#define COOL_TREE_FAIL_H
 //////////////////////////////////////////////////////////
 //
 // file: cool-tree.h
@@ -135,6 +135,9 @@ public:
    }
    Program copy_Program();
    void dump(ostream& stream, int n);
+   Classes GetClasses() const{
+      return classes;
+   }
 
 #ifdef Program_SHARED_EXTRAS
    Program_SHARED_EXTRAS
@@ -161,6 +164,18 @@ public:
    }
    Class_ copy_Class_();
    void dump(ostream& stream, int n);
+   Symbol GetName() const{
+      return name;
+   }
+   Symbol GetParent() const {
+      return parent;
+   }
+   Features GetFeatures() const {
+      return features;
+   }
+   Symbol GetFilename() const{
+      return filename;
+   }
 
 #ifdef Class__SHARED_EXTRAS
    Class__SHARED_EXTRAS
@@ -187,6 +202,18 @@ public:
    }
    Feature copy_Feature();
    void dump(ostream& stream, int n);
+   Symbol GetName() const {
+      return name;
+   }
+   Formals GetFormals() const {
+      return formals;
+   }
+   Symbol GetReturntype() const {
+      return return_type;
+   }
+   Expression GetExpression() const{
+      return expr;
+   }
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS
@@ -211,6 +238,15 @@ public:
    }
    Feature copy_Feature();
    void dump(ostream& stream, int n);
+   Symbol GetName() const{
+      return name;
+   }
+   Symbol GetType_decl() const{
+      return type_decl;
+   }
+   Expression GetInit() const {
+      return init;
+   }
 
 #ifdef Feature_SHARED_EXTRAS
    Feature_SHARED_EXTRAS
@@ -233,6 +269,13 @@ public:
    }
    Formal copy_Formal();
    void dump(ostream& stream, int n);
+   Symbol GetName() const {
+      return name;
+   }
+   Symbol GetType_decl() const{
+      return type_decl;
+   }
+
 
 #ifdef Formal_SHARED_EXTRAS
    Formal_SHARED_EXTRAS
@@ -257,6 +300,16 @@ public:
    }
    Case copy_Case();
    void dump(ostream& stream, int n);
+   Symbol GetName() const {
+      return name;
+   }
+   Symbol GetType_decl() const{
+      return type_decl;
+   }
+   Expression GetExpression() const{
+      return expr;
+   }
+
 
 #ifdef Case_SHARED_EXTRAS
    Case_SHARED_EXTRAS
@@ -279,6 +332,12 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Symbol GetName() const {
+      return name;
+   }
+   Expression GetExpression() const{
+      return expr;
+   }   
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -305,6 +364,18 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Symbol GetName() const {
+      return name;
+   }
+   Expressions GetActual() const{
+      return actual;
+   }
+   Symbol GetTypename() const{
+      return type_name;
+   }
+   Expression GetExpression() const{
+      return expr;
+   }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -329,6 +400,16 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Symbol GetName() const {
+      return name;
+   }
+   Expressions GetActual() const{
+      return actual;
+   }
+   Expression GetExpression() const{
+      return expr;
+   }
+
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -353,6 +434,17 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Expression GetPred() const{
+      return pred;
+   }
+   Expression GetThenExpr() const{
+      return then_exp;
+   }
+   Expression GetElseExpr() const{
+      return else_exp;
+   }
+
+
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -375,6 +467,12 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Expression GetPred() const{
+      return pred;
+   }
+   Expression GetBody() const{
+      return body;
+   }   
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -397,6 +495,12 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Expression GetExpression() const{
+      return expr;
+   }
+   Cases GetCases() const{
+      return cases;
+   }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -417,6 +521,9 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Expressions GetBody() const{
+      return body;
+   }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -443,6 +550,18 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Symbol GetIdentifier() const{
+      return identifier;
+   }
+   Symbol GetType_decl() const{
+      return type_decl;
+   }
+   Expression GetInit() const{
+      return init;
+   }
+   Expression GetBody() const{
+      return body;
+   }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -465,7 +584,13 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
-
+   Expression GetLExpression() const{
+      return e1;
+   }
+   Expression GetRExpression() const{
+      return e2;
+   }   
+Symbol
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
 #endif
@@ -487,6 +612,12 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Expression GetLExpression() const{
+      return e1;
+   }
+   Expression GetRExpression() const{
+      return e2;
+   }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -509,6 +640,12 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Expression GetLExpression() const{
+      return e1;
+   }
+   Expression GetRExpression() const{
+      return e2;
+   }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -531,6 +668,12 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Expression GetLExpression() const{
+      return e1;
+   }
+   Expression GetRExpression() const{
+      return e2;
+   }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -551,6 +694,9 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Expression GetExpression() const{
+      return e1;
+   }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -570,6 +716,12 @@ public:
    lt_class(Expression a1, Expression a2) {
       e1 = a1;
       e2 = a2;
+   }
+   Expression GetLExpression() const{
+      return e1;
+   }
+   Expression GetRExpression() const{
+      return e2;
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
@@ -595,6 +747,12 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Expression GetLExpression() const{
+      return e1;
+   }
+   Expression GetRExpression() const{
+      return e2;
+   }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -617,6 +775,12 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Expression GetLExpression() const{
+      return e1;
+   }
+   Expression GetRExpression() const{
+      return e2;
+   }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -637,6 +801,9 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Expression GetExpression() const{
+      return e1;
+   }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -657,6 +824,10 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Symbol GetToken() const{
+      return token;
+   }
+
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -677,6 +848,9 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Boolean GetVal()const{
+      return val;
+   }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -697,6 +871,9 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Symbol GetToken() const{
+      return token;
+   }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -717,6 +894,9 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Symbol GetTypename() const{
+      return type_name;
+   }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -737,6 +917,9 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Expression GetExpression()const {
+      return e1;
+   }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -755,6 +938,9 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Expression GetExpression() const{
+      return NULL;
+   }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -775,6 +961,9 @@ public:
    }
    Expression copy_Expression();
    void dump(ostream& stream, int n);
+   Symbol GetName() const{
+      return name;
+   }
 
 #ifdef Expression_SHARED_EXTRAS
    Expression_SHARED_EXTRAS
@@ -831,6 +1020,5 @@ Expression new_(Symbol);
 Expression isvoid(Expression);
 Expression no_expr();
 Expression object(Symbol);
-
 
 #endif
