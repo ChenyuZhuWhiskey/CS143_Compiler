@@ -586,8 +586,8 @@ Symbol typcase_class::CheckExprType(){
         branch_type_decls.push_back(((branch_class*)branch) -> GetTypeDecl());
 
     }
-    for (int i = 0; i < branch_types.size() - 1; ++i) {
-        for (int j = i + 1; j < branch_types.size(); ++j) {
+    for (size_t i = 0; i < branch_types.size() - 1; ++i) {
+        for (size_t j = i + 1; j < branch_types.size(); ++j) {
             if (branch_type_decls[i] == branch_type_decls[j]) {
                 classtable->semant_error(curr_class) << "Duplicate branch "<< branch_type_decls[i] << " in case statement." << std::endl;
             }
@@ -905,7 +905,7 @@ void program_class::semant()
             curr_feature->CheckFeatureType();
         }
 
-        for (int j = 0; j < path.size(); ++j) {
+        for (size_t j = 0; j < path.size(); ++j) {
             attribtable.exitscope();
         }
 
